@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Enregistrer Token Facebook Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 500px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 20px;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .message {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Enregistrer Token Facebook Page</h1>
+  <form id="tokenForm">
+    <label for="page_id">Page ID</label>
+    <input type="text" id="page_id" name="page_id" required />
+
+    <label for="token">Page Access Token</label>
+    <input type="text" id="token" name="token" required />
+
+    <button type="submit">Enregistrer</button>
+  </form>
+
+  <div class="message" id="message"></div>
+
+  <script>
+    const form = document.getElementById('tokenForm');
+    const messageDiv = document.getElementById('message');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const page_id = form.page_id.value.trim();
+      const token = form.token.value.trim();
+
+      if (!page_id || !token) {
+        messageDiv.textContent = "Merci de remplir tous les champs.";
+        messageDiv.style.color = "red";
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/save-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ page_id, token })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          messageDiv.textContent = data.message || "Token enregistré avec succès !";
+          messageDiv.style.color = "green";
+          form.reset();
+        } else {
+          messageDiv.textContent = data.message || "Erreur lors de l'enregistrement.";
+          messageDiv.style.color = "red";
+        }
+      } catch (err) {
+        messageDiv.textContent = "Erreur réseau ou serveur.";
+        messageDiv.style.color = "red";
+      }
+    });
+  </script>
+</body>
+</html>
