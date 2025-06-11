@@ -2,93 +2,174 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Enregistrer Token Facebook Page</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Auto PageBOT</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
     body {
-      font-family: Arial, sans-serif;
-      max-width: 500px;
-      margin: 40px auto;
-      padding: 0 20px;
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #0f172a;
+      color: #f1f5f9;
     }
-    h1 {
-      text-align: center;
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 250px;
+      height: 100%;
+      background-color: #1e293b;
+      padding: 20px;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+    }
+    .sidebar.open {
+      transform: translateX(0);
+    }
+    .sidebar h2 {
+      font-size: 22px;
       margin-bottom: 30px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
-    label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: bold;
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
     }
-    input[type="text"] {
-      width: 100%;
-      padding: 8px;
+    .sidebar ul li {
       margin-bottom: 20px;
-      box-sizing: border-box;
-    }
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
+      font-weight: bold;
       cursor: pointer;
     }
-    .message {
-      margin-top: 20px;
-      font-weight: bold;
+    .header {
+      background-color: #1e293b;
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .menu-toggle {
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .dashboard {
+      margin-left: 0;
+      padding: 20px;
+      transition: margin-left 0.3s ease;
+    }
+    .sidebar.open ~ .dashboard {
+      margin-left: 250px;
+    }
+    .form-card {
+      background-color: #1e293b;
+      border-radius: 12px;
+      padding: 30px;
+      max-width: 500px;
+      margin: auto;
+    }
+    .form-card h1 {
+      text-align: center;
+      margin-bottom: 10px;
+      background: linear-gradient(90deg, #ec4899, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: 28px;
+    }
+    .form-card input, .form-card textarea {
+      width: 100%;
+      margin-bottom: 20px;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+    }
+    .form-card label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    .form-card .checkbox {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .form-card button {
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      padding: 12px;
+      font-size: 16px;
+      width: 100%;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .form-card button i {
+      margin-right: 8px;
     }
   </style>
 </head>
 <body>
-  <h1>Enregistrer Token Facebook Page</h1>
-  <form id="tokenForm">
-    <label for="page_id">Page ID</label>
-    <input type="text" id="page_id" name="page_id" required />
+  <div class="sidebar" id="sidebar">
+    <h2><i class="fa-solid fa-robot"></i> Menu</h2>
+    <ul>
+      <li>Maison</li>
+      <li>Tutoriel</li>
+      <li>Commandes</li>
+      <li>En ligne</li>
+      <li>Politique de confidentialité</li>
+      <li>Contact</li>
+    </ul>
+  </div>
 
-    <label for="token">Page Access Token</label>
-    <input type="text" id="token" name="token" required />
+  <div class="header">
+    <i class="fa-solid fa-bars menu-toggle" onclick="toggleSidebar()"></i>
+    <h2>APB - Tableau de bord</h2>
+    <i class="fa-solid fa-bell"></i>
+  </div>
 
-    <button type="submit">Enregistrer</button>
-  </form>
-
-  <div class="message" id="message"></div>
+  <div class="dashboard">
+    <div class="form-card">
+      <h1>Auto PageBOT</h1>
+      <p>Connectez-vous en utilisant votre identifiant de page et votre jeton de page pour gérer votre profil.</p>
+      <label for="page_id">ID de la page :</label>
+      <input type="text" id="page_id" placeholder="par exemple 1234567890">
+      <label for="token">Jeton de page :</label>
+      <textarea id="token" rows="2" placeholder="Collez votre PageToken ici..."></textarea>
+      <div class="checkbox">
+        <input type="checkbox" id="privacy">
+        <label for="privacy">J'accepte la <a href="#">politique de confidentialité</a></label>
+      </div>
+      <button onclick="submitForm()"><i class="fa-solid fa-right-to-bracket"></i> Se connecter</button>
+    </div>
+  </div>
 
   <script>
-    const form = document.getElementById('tokenForm');
-    const messageDiv = document.getElementById('message');
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('open');
+    }
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
+    function submitForm() {
+      const page_id = document.getElementById('page_id').value;
+      const token = document.getElementById('token').value;
+      const privacy = document.getElementById('privacy').checked;
 
-      const page_id = form.page_id.value.trim();
-      const token = form.token.value.trim();
-
-      if (!page_id || !token) {
-        messageDiv.textContent = "Merci de remplir tous les champs.";
-        messageDiv.style.color = "red";
+      if (!privacy) {
+        alert("Veuillez accepter la politique de confidentialité.");
         return;
       }
 
-      try {
-        const response = await fetch('/api/save-token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ page_id, token })
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          messageDiv.textContent = data.message || "Token enregistré avec succès !";
-          messageDiv.style.color = "green";
-          form.reset();
-        } else {
-          messageDiv.textContent = data.message || "Erreur lors de l'enregistrement.";
-          messageDiv.style.color = "red";
-        }
-      } catch (err) {
-        messageDiv.textContent = "Erreur réseau ou serveur.";
-        messageDiv.style.color = "red";
-      }
-    });
+      fetch('/api/save-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ page_id, token })
+      })
+      .then(res => res.json())
+      .then(data => alert(data.message))
+      .catch(err => alert("Erreur lors de l'enregistrement."));
+    }
   </script>
 </body>
 </html>
