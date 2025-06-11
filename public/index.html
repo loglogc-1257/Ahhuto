@@ -3,173 +3,82 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Auto PageBOT</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <title>Dashboard Messenger AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #0f172a;
-      color: #f1f5f9;
+      font-family: 'Inter', sans-serif;
     }
     .sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 250px;
-      height: 100%;
-      background-color: #1e293b;
-      padding: 20px;
-      transform: translateX(-100%);
-      transition: transform 0.3s ease;
-    }
-    .sidebar.open {
-      transform: translateX(0);
-    }
-    .sidebar h2 {
-      font-size: 22px;
-      margin-bottom: 30px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .sidebar ul {
-      list-style: none;
-      padding: 0;
-    }
-    .sidebar ul li {
-      margin-bottom: 20px;
-      font-weight: bold;
-      cursor: pointer;
+      background-color: #1e293b; /* Dark blue gray */
     }
     .header {
-      background-color: #1e293b;
-      padding: 15px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      background-color: #0f172a; /* Even darker header */
     }
-    .menu-toggle {
-      font-size: 24px;
-      cursor: pointer;
-    }
-    .dashboard {
-      margin-left: 0;
-      padding: 20px;
-      transition: margin-left 0.3s ease;
-    }
-    .sidebar.open ~ .dashboard {
-      margin-left: 250px;
-    }
-    .form-card {
-      background-color: #1e293b;
-      border-radius: 12px;
-      padding: 30px;
-      max-width: 500px;
-      margin: auto;
-    }
-    .form-card h1 {
-      text-align: center;
-      margin-bottom: 10px;
-      background: linear-gradient(90deg, #ec4899, #38bdf8);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      font-size: 28px;
-    }
-    .form-card input, .form-card textarea {
-      width: 100%;
-      margin-bottom: 20px;
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      font-size: 16px;
-    }
-    .form-card label {
-      display: block;
-      margin-bottom: 5px;
-    }
-    .form-card .checkbox {
-      display: flex;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    .form-card button {
-      background-color: #2563eb;
-      color: white;
-      border: none;
-      padding: 12px;
-      font-size: 16px;
-      width: 100%;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    .form-card button i {
-      margin-right: 8px;
+    .highlight {
+      background-color: #3b82f6;
     }
   </style>
 </head>
-<body>
-  <div class="sidebar" id="sidebar">
-    <h2><i class="fa-solid fa-robot"></i> Menu</h2>
-    <ul>
-      <li>Maison</li>
-      <li>Tutoriel</li>
-      <li>Commandes</li>
-      <li>En ligne</li>
-      <li>Politique de confidentialité</li>
-      <li>Contact</li>
-    </ul>
+<body class="flex h-screen bg-gray-100">
+  <!-- Sidebar -->
+  <div class="sidebar w-64 text-white flex flex-col p-5 space-y-6">
+    <div class="text-2xl font-bold mb-6">🤖 Messenger AI</div>
+    <nav class="flex flex-col gap-3">
+      <a href="#" class="hover:bg-blue-500 p-2 rounded transition-all">🏠 Accueil</a>
+      <a href="#" class="hover:bg-blue-500 p-2 rounded transition-all">📡 Pages connectées</a>
+      <a href="#" class="hover:bg-blue-500 p-2 rounded transition-all">📨 Contact</a>
+    </nav>
+    <div class="mt-auto text-sm text-gray-400">&copy; 2025 by AI Platform</div>
   </div>
 
-  <div class="header">
-    <i class="fa-solid fa-bars menu-toggle" onclick="toggleSidebar()"></i>
-    <h2>APB - Tableau de bord</h2>
-    <i class="fa-solid fa-bell"></i>
-  </div>
-
-  <div class="dashboard">
-    <div class="form-card">
-      <h1>Auto PageBOT</h1>
-      <p>Connectez-vous en utilisant votre identifiant de page et votre jeton de page pour gérer votre profil.</p>
-      <label for="page_id">ID de la page :</label>
-      <input type="text" id="page_id" placeholder="par exemple 1234567890">
-      <label for="token">Jeton de page :</label>
-      <textarea id="token" rows="2" placeholder="Collez votre PageToken ici..."></textarea>
-      <div class="checkbox">
-        <input type="checkbox" id="privacy">
-        <label for="privacy">J'accepte la <a href="#">politique de confidentialité</a></label>
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col">
+    <!-- Header -->
+    <header class="header text-white p-4 flex items-center justify-between shadow">
+      <h1 class="text-xl font-semibold">Panneau de Contrôle</h1>
+      <div class="flex items-center space-x-4">
+        <button class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm">🔔</button>
+        <span class="text-sm">Bienvenue, Admin</span>
       </div>
-      <button onclick="submitForm()"><i class="fa-solid fa-right-to-bracket"></i> Se connecter</button>
-    </div>
+    </header>
+
+    <!-- Form Section -->
+    <main class="p-6 bg-white flex flex-col gap-6">
+      <h2 class="text-lg font-semibold">Connecter une Page Facebook</h2>
+      <form id="tokenForm" class="space-y-4 max-w-lg">
+        <div>
+          <label for="page_id" class="block text-sm font-medium">ID de la Page</label>
+          <input type="text" id="page_id" name="page_id" class="w-full border px-3 py-2 rounded mt-1" required />
+        </div>
+        <div>
+          <label for="token" class="block text-sm font-medium">Jeton d’accès</label>
+          <input type="text" id="token" name="token" class="w-full border px-3 py-2 rounded mt-1" required />
+        </div>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Connexion</button>
+      </form>
+      <div id="response" class="text-green-600 font-medium hidden"></div>
+    </main>
   </div>
 
   <script>
-    function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.classList.toggle('open');
-    }
+    document.getElementById('tokenForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const page_id = document.getElementById('page_id').value.trim();
+      const token = document.getElementById('token').value.trim();
 
-    function submitForm() {
-      const page_id = document.getElementById('page_id').value;
-      const token = document.getElementById('token').value;
-      const privacy = document.getElementById('privacy').checked;
-
-      if (!privacy) {
-        alert("Veuillez accepter la politique de confidentialité.");
-        return;
-      }
-
-      fetch('/api/save-token', {
+      const response = await fetch('/api/save-token', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ page_id, token })
-      })
-      .then(res => res.json())
-      .then(data => alert(data.message))
-      .catch(err => alert("Erreur lors de l'enregistrement."));
-    }
+      });
+
+      const result = await response.json();
+      const messageDiv = document.getElementById('response');
+      messageDiv.textContent = result.message;
+      messageDiv.classList.remove('hidden');
+    });
   </script>
 </body>
 </html>
