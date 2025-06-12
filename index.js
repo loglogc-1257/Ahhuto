@@ -91,6 +91,11 @@ app.post('/api/save-token', (req, res) => {
   res.json({ message: 'Token enregistré avec succès' });
 });
 
+// ✅ Route pour UptimeRobot
+app.get('/', (req, res) => {
+  res.send('Bot en ligne 🚀');
+});
+
 // Démarrage serveur
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
