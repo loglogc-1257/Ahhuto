@@ -1,99 +1,94 @@
 const axios = require('axios');
-const { sendMessage } = require('../handles/sendMessage');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-const TEXTCORTEX_API_KEY = 'gAAAAABoSVlO0gyAQy__1IvMCgwn1g7lHIL2WrtZdQ2mxHOt6HvHPX7wqBfRrgHc1MlgSJ1GZabV9gnvAJE54QSRe_0gXwUKHlAzEPiMtDXs8HlMiIE-wJI1K0XDBIEz6IlmETUsoG0KDhPQKZClRz4PfZuxJ5iYGOYBTpP2lx4DmNucJLGYeE4=';
+const API_KEY = "AIzaSyDTw8JPLzWiaF2JKHWUbaiZYOM07phcLGE";
+const conversationHistory = {};
+
+const AI_INFO = `
+Tu es Stanley Bot, une intelligence artificielle créée par Stanley, un jeune développeur passionné par l'intelligence artificielle.
+La date d'aujourd'hui est le ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
+
+Tu dois toujours :
+1. Fournir des réponses à jour en 2025.
+2. Mentionner que tu es Stanley Bot quand on te le demande.
+3. Citer tes sources quand tu donnes des informations.
+4. Être poli et professionnel.
+5. Toujours effectuer des recherches sur Internet avant de répondre, en utilisant :
+   - Google : https://www.google.com/search?q=
+   - Wikipedia : https://fr.wikipedia.org/w/index.php?search=
+   - Stack Overflow : https://stackoverflow.com/search?q=
+   - MDN Web Docs : https://developer.mozilla.org/fr/search?q=
+`;
 
 module.exports = {
   name: 'ai',
-  description: 'Interact with AI (fastest responder wins)',
-  usage: 'gpt4 [your message]',
-  author: 'coffee',
+  description: "Répond à vos questions grâce à Stanley Bot (Gemini)",
+  usage: 'gpt4 [question]',
+  aliases: ['stanley', 'stan', 'gptgemini'],
+  cooldown: 3,
 
-  async execute(senderId, args, pageAccessToken) {
-    const prompt = args.join(' ').trim();
+  async execute(senderId, args, pageAccessToken, api, event) {
+    const prompt = args.join(" ").trim();
 
     if (!prompt) {
-      return sendMessage(senderId, {
-        text: "Veuillez poser votre question ou tapez 'help' pour voir les autres commandes disponibles."
-      }, pageAccessToken);
+      return api.sendMessage(
+        "👋 Salut ! Je suis Stanley Bot, ton assistant intelligent. Pose-moi une question et je te répondrai avec plaisir ! 💡\n\n✍️ *Exemple* :  Quel est le sens de la vie ?",
+        event.threadID,
+        event.messageID
+      );
     }
 
-    const lowerPrompt = prompt.toLowerCase();
-    const greetings = ['salut', 'hi', 'hello', 'bonjour'];
+    if (!conversationHistory[senderId]) conversationHistory[senderId] = [];
+    conversationHistory[senderId].push(`Utilisateur: ${prompt}`);
 
-    if (greetings.includes(lowerPrompt)) {
-      return sendMessage(senderId, {
-        text:
-          "👋 Bonjour et bienvenue !\n\n" +
-          "Merci d'utiliser notre intelligence artificielle. 🙏\n\n" +
-          "✨ Pour nous aider, n'hésitez pas à partager cette IA dans vos groupes et à inviter vos amis à la découvrir.\n\n" +
-          "✅ Votre satisfaction est notre priorité absolue."
-      }, pageAccessToken);
-    }
-
-    const encodedPrompt = encodeURIComponent(prompt);
-
-    const getUrls = [
-      `https://kaiz-apis.gleeze.com/api/vondy-ai?ask=${encodedPrompt}&apikey=1746c05f-4329-46af-a65a-ca8bff8002e6`,
-      `https://kaiz-apis.gleeze.com/api/gemini-flash-2.0?q=${encodedPrompt}&uid=1&imageUrl=&apikey=1746c05f-4329-46af-a65a-ca8bff8002e6`,
-      `https://kaiz-apis.gleeze.com/api/you-ai?ask=${encodedPrompt}&uid=1&apikey=1746c05f-4329-46af-a65a-ca8bff8002e6`,
-      `https://text.pollinations.ai/${encodedPrompt}`
-    ];
+    let chatInfoMessageID = "";
+    api.sendMessage(`Stanley Bot est en train de réfléchir...`, event.threadID, (err, info) => {
+      if (!err) chatInfoMessageID = info.messageID;
+    }, event.messageID);
 
     try {
-      const getRequests = getUrls.map(url =>
-        axios.get(url).then(res => res.data)
+      const genAI = new GoogleGenerativeAI(API_KEY);
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+      const context = conversationHistory[senderId].join("\n");
+      const fullPrompt = `${AI_INFO}\n\nHistorique:\n${context}\n\nUtilisateur: ${prompt}\n\nAssistant:`;
+
+      const result = await model.generateContent(fullPrompt);
+      const response = result.response.text();
+
+      conversationHistory[senderId].push(`Stanley Bot: \n\n${response}`);
+
+      await sendMessageInChunks(api, event.threadID, response, chatInfoMessageID);
+
+    } catch (error) {
+      console.error("Erreur API Gemini :", error);
+      return api.sendMessage(
+        "❌ Une erreur est survenue avec Stanley Bot. Réessaie plus tard.",
+        event.threadID,
+        event.messageID
       );
-
-      const postRequest = axios.post(
-        'https://api.textcortex.com/v1/generate',
-        { prompt: prompt },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${TEXTCORTEX_API_KEY}`
-          }
-        }
-      ).then(res => {
-        return res.data.text || res.data.result || '';
-      });
-
-      const firstResponse = await Promise.any([...getRequests, postRequest]);
-
-      const response =
-        typeof firstResponse === 'string' ? firstResponse : (
-          firstResponse?.result ||
-          firstResponse?.description ||
-          firstResponse?.reponse ||
-          firstResponse?.response ||
-          JSON.stringify(firstResponse)
-        );
-
-      if (response) {
-        const parts = [];
-        for (let i = 0; i < response.length; i += 1800) {
-          parts.push(response.substring(i, i + 1800));
-        }
-
-        for (const part of parts) {
-          await sendMessage(senderId, { text: part + ' 🪐' }, pageAccessToken);
-        }
-      } else {
-        await sendMessage(senderId, {
-          text: "Aucune réponse valide reçue de l'une des APIs."
-        }, pageAccessToken);
-      }
-
-    } catch (err) {
-      console.error("Erreur lors de l'appel aux APIs:", err.message || err);
-      await sendMessage(senderId, {
-        text:
-          "✨🌟 Découvrez notre nouvelle alternative de bot AI simple ! ✨🌟\n\n" +
-          "Besoin d'un assistant virtuel fiable et disponible 24/7 ? Notre nouvelle alternative de bot AI est là pour vous ! " +
-          "Il répond à toutes vos questions avec des informations à jour et vous aide dans toutes vos démarches. " +
-          "Ne manquez pas cette opportunité de simplifier votre vie quotidienne !\n\n" +
-          "Cliquez ici pour découvrir notre IA : [Découvrez notre IA](https://www.facebook.com/profile.php?id=100085014123974) 🌈✨"
-      }, pageAccessToken);
     }
   }
 };
+
+async function sendMessageInChunks(api, threadID, message, replyMsgID) {
+  const maxLength = 2000;
+  let start = 0;
+
+  while (start < message.length) {
+    let end = start + maxLength;
+    if (end < message.length) {
+      let lastSpace = message.lastIndexOf(" ", end);
+      if (lastSpace > start) end = lastSpace;
+    }
+
+    const chunk = message.substring(start, end);
+    if (start === 0 && replyMsgID) {
+      await api.editMessage(chunk, replyMsgID);
+    } else {
+      await api.sendMessage(chunk, threadID);
+    }
+
+    start = end;
+  }
+}
