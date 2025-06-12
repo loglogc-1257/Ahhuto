@@ -1,89 +1,94 @@
 const axios = require('axios');
-const { sendMessage } = require('../handles/sendMessage');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+const API_KEY = "AIzaSyDTw8JPLzWiaF2JKHWUbaiZYOM07phcLGE";
+const conversationHistory = {};
+
+const AI_INFO = `
+Tu es Stanley Bot, une intelligence artificielle créée par Stanley, un jeune développeur passionné par l'intelligence artificielle.
+La date d'aujourd'hui est le ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
+
+Tu dois toujours :
+1. Fournir des réponses à jour en 2025.
+2. Mentionner que tu es Stanley Bot quand on te le demande.
+3. Citer tes sources quand tu donnes des informations.
+4. Être poli et professionnel.
+5. Toujours effectuer des recherches sur Internet avant de répondre, en utilisant :
+   - Google : https://www.google.com/search?q=
+   - Wikipedia : https://fr.wikipedia.org/w/index.php?search=
+   - Stack Overflow : https://stackoverflow.com/search?q=
+   - MDN Web Docs : https://developer.mozilla.org/fr/search?q=
+`;
 
 module.exports = {
-  name: 'ai',
-  description: 'Interact with AI using Gemini (fastest responder wins)',
-  usage: 'gpt4 [your message]',
-  author: 'coffee',
+  name: 'ai',
+  description: "Répond à vos questions grâce à Stanley Bot (Gemini)",
+  usage: 'gpt4 [question]',
+  aliases: ['stanley', 'stan', 'gptgemini'],
+  cooldown: 3,
 
-  async execute(senderId, args, pageAccessToken) {
-    const prompt = args.join(' ').trim();
+  async execute(senderId, args, pageAccessToken, api, event) {
+    const prompt = args.join(" ").trim();
 
-    if (!prompt) {
-      return sendMessage(senderId, {
-        text: "❓ Veuillez poser votre question ou tapez 'help' pour voir les commandes disponibles."
-      }, pageAccessToken);
-    }
+    if (!prompt) {
+      return api.sendMessage(
+        "👋 Salut ! Je suis Stanley Bot, ton assistant intelligent. Pose-moi une question et je te répondrai avec plaisir ! 💡\n\n✍️ *Exemple* :  Quel est le sens de la vie ?",
+        event.threadID,
+        event.messageID
+      );
+    }
 
-    const lowerPrompt = prompt.toLowerCase();
-    const greetings = ['salut', 'hi', 'hello', 'bonjour'];
+    if (!conversationHistory[senderId]) conversationHistory[senderId] = [];
+    conversationHistory[senderId].push(`Utilisateur: ${prompt}`);
 
-    if (greetings.includes(lowerPrompt)) {
-      return sendMessage(senderId, {
-        text:
-          "👋 Bonjour et bienvenue !\n\n" +
-          "Merci d'utiliser notre intelligence artificielle. 🙏\n\n" +
-          "✨ Pour nous soutenir, partagez cette IA avec vos amis ou dans vos groupes.\n\n" +
-          "🚀 Posez votre question pour commencer."
-      }, pageAccessToken);
-    }
+    let chatInfoMessageID = "";
+    api.sendMessage(`Stanley Bot est en train de réfléchir...`, event.threadID, (err, info) => {
+      if (!err) chatInfoMessageID = info.messageID;
+    }, event.messageID);
 
-    const GEMINI_API_KEYS = [
-      'AIzaSyDIGG4puPZ6kPIUR0CSD6fOgh6PNWqYFuM',
-      'AIzaSyCPCItkc_2hGwufiiTgz1dqvyLbBnmozMA',
-      'AIzaSyAV0s2XU0gkrfkWiBOMxx6d6AshqnyPbiE'
-    ];
+    try {
+      const genAI = new GoogleGenerativeAI(API_KEY);
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-    try {
-      const geminiRequests = GEMINI_API_KEYS.map(key =>
-        axios.post(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
-          {
-            contents: [
-              {
-                parts: [
-                  { text: prompt }
-                ]
-              }
-            ]
-          },
-          {
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          }
-        ).then(res => res.data?.candidates?.[0]?.content?.parts?.[0]?.text || '')
-      );
+      const context = conversationHistory[senderId].join("\n");
+      const fullPrompt = `${AI_INFO}\n\nHistorique:\n${context}\n\nUtilisateur: ${prompt}\n\nAssistant:`;
 
-      const firstResponse = await Promise.any(geminiRequests);
+      const result = await model.generateContent(fullPrompt);
+      const response = result.response.text();
 
-      const response = typeof firstResponse === 'string'
-        ? firstResponse
-        : JSON.stringify(firstResponse);
+      conversationHistory[senderId].push(`Stanley Bot: \n\n${response}`);
 
-      if (response) {
-        const parts = [];
-        for (let i = 0; i < response.length; i += 1800) {
-          parts.push(response.substring(i, i + 1800));
-        }
+      await sendMessageInChunks(api, event.threadID, response, chatInfoMessageID);
 
-        for (const part of parts) {
-          await sendMessage(senderId, { text: part + ' 🪐' }, pageAccessToken);
-        }
-      } else {
-        await sendMessage(senderId, {
-          text: "⚠️ Une erreur est survenue, et aucune réponse n'a pu être obtenue. Veuillez réessayer plus tard."
-        }, pageAccessToken);
-      }
-
-    } catch (err) {
-      console.error("Erreur Gemini API:", err.message || err);
-      await sendMessage(senderId, {
-        text:
-          "🚫 Oups, toutes nos IA sont actuellement inaccessibles.\n\n" +
-          "💡 Réessayez dans quelques instants. En cas de problème persistant, contactez notre support. Merci pour votre patience !"
-      }, pageAccessToken);
-    }
-  }
+    } catch (error) {
+      console.error("Erreur API Gemini :", error);
+      return api.sendMessage(
+        "❌ Une erreur est survenue avec Stanley Bot. Réessaie plus tard.",
+        event.threadID,
+        event.messageID
+      );
+    }
+  }
 };
+
+async function sendMessageInChunks(api, threadID, message, replyMsgID) {
+  const maxLength = 2000;
+  let start = 0;
+
+  while (start < message.length) {
+    let end = start + maxLength;
+    if (end < message.length) {
+      let lastSpace = message.lastIndexOf(" ", end);
+      if (lastSpace > start) end = lastSpace;
+    }
+
+    const chunk = message.substring(start, end);
+    if (start === 0 && replyMsgID) {
+      await api.editMessage(chunk, replyMsgID);
+    } else {
+      await api.sendMessage(chunk, threadID);
+    }
+
+    start = end;
+  }
+}
