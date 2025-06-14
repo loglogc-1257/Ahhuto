@@ -2,83 +2,301 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard Stanley AI</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stanley AI Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
   <style>
-    body {
-      font-family: 'Inter', sans-serif;
+    .sidebar-anim {
+      transition: width 0.3s cubic-bezier(.4,2,.6,1), left 0.3s cubic-bezier(.4,2,.6,1);
     }
-    .sidebar {
-      background-color: #1e293b; /* Dark blue gray */
+    .fade-in {
+      animation: fadeInUp 0.7s cubic-bezier(.4,2,.6,1);
     }
-    .header {
-      background-color: #0f172a; /* Even darker header */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(40px);}
+      to { opacity: 1; transform: translateY(0);}
     }
-    .highlight {
-      background-color: #3b82f6;
+    .slide-in {
+      animation: slideIn 0.5s cubic-bezier(.4,2,.6,1);
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-40px);}
+      to { opacity: 1; transform: translateX(0);}
+    }
+    .pulse {
+      animation: pulse 1.2s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1);}
+      50% { transform: scale(1.2);}
+      100% { transform: scale(1);}
+    }
+    .sidebar-overlay {
+      background: rgba(0,0,0,0.25);
+      position: fixed;
+      inset: 0;
+      z-index: 20;
     }
   </style>
 </head>
-<body class="flex h-screen bg-gray-100">
-  <!-- Sidebar -->
-  <div class="sidebar w-64 text-white flex flex-col p-5 space-y-6">
-    <div class="text-2xl font-bold mb-6">🤖 Messenger AI</div>
-    <nav class="flex flex-col gap-3">
-      <a href="#" class="hover:bg-blue-500 p-2 rounded transition-all">🏠 Accueil</a>
-      <a href="#" class="hover:bg-blue-500 p-2 rounded transition-all">📡 Pages connectées</a>
-      <a href="#" class="hover:bg-blue-500 p-2 rounded transition-all">📨 Contact</a>
-    </nav>
-    <div class="mt-auto text-sm text-gray-400">&copy; 2025 by AI Platform</div>
-  </div>
+<body class="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 min-h-screen flex flex-col md:flex-row">
 
-  <!-- Main Content -->
-  <div class="flex-1 flex flex-col">
+  <!-- Sidebar -->
+  <nav id="sidebar" class="sidebar-anim fixed md:static z-30 top-0 left-0 h-full bg-gradient-to-b from-blue-700 to-blue-900 shadow-xl flex flex-col py-6 px-2 md:px-4 w-20 md:w-64 transition-all duration-300">
+    <div class="flex items-center justify-between mb-10 px-2">
+      <div class="bg-white bg-opacity-90 shadow-lg rounded-2xl w-12 h-12 flex items-center justify-center font-extrabold text-2xl text-primary border-4 border-blue-200">
+        <span class="bg-gradient-to-tr from-blue-500 to-purple-500 bg-clip-text text-transparent">S</span>
+      </div>
+      <button id="sidebar-toggle" class="md:hidden ml-2 p-2 rounded-lg hover:bg-blue-800/30 transition" aria-label="Ouvrir le menu">
+        <svg id="sidebar-toggle-icon" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </div>
+    <ul class="flex flex-col gap-2 mt-2">
+      <li>
+        <button data-section="home" class="sidebar-link w-full flex items-center gap-4 px-4 py-3 rounded-xl font-semibold transition-all duration-200 text-white hover:bg-blue-800/40" aria-current="page">
+          <i data-lucide="Home" class="w-6 h-6 text-blue-200"></i>
+          <span class="hidden md:inline">Accueil</span>
+        </button>
+      </li>
+      <li>
+        <button data-section="pages" class="sidebar-link w-full flex items-center gap-4 px-4 py-3 rounded-xl font-semibold transition-all duration-200 text-white hover:bg-blue-800/40">
+          <i data-lucide="Users" class="w-6 h-6 text-blue-200"></i>
+          <span class="hidden md:inline">Pages Connectées</span>
+          <span class="ml-auto bg-pink-500 text-white text-xs px-2 py-0.5 rounded-full font-bold pulse">0</span>
+        </button>
+      </li>
+      <li>
+        <button data-section="contact" class="sidebar-link w-full flex items-center gap-4 px-4 py-3 rounded-xl font-semibold transition-all duration-200 text-white hover:bg-blue-800/40">
+          <i data-lucide="Mail" class="w-6 h-6 text-blue-200"></i>
+          <span class="hidden md:inline">Contact</span>
+        </button>
+      </li>
+    </ul>
+    <div class="flex-1"></div>
+    <div class="hidden md:block text-xs text-blue-200 px-4 mt-8">
+      <span class="opacity-70">Stanley AI &copy; 2024</span>
+    </div>
+  </nav>
+  <div id="sidebar-overlay" class="sidebar-overlay hidden"></div>
+
+  <!-- Main -->
+  <main class="flex-1 flex flex-col min-h-screen md:ml-20 md:pl-44">
     <!-- Header -->
-    <header class="header text-white p-4 flex items-center justify-between shadow">
-      <h1 class="text-xl font-semibold">Panneau de Contrôle</h1>
-      <div class="flex items-center space-x-4">
-        <button class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm">🔔</button>
-        <span class="text-sm">Bienvenue, Admin</span>
+    <header class="sticky top-0 z-10 flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-md shadow-md fade-in">
+      <div>
+        <h1 class="text-3xl font-extrabold bg-gradient-to-r from-blue-700 via-purple-600 to-pink-500 bg-clip-text text-transparent tracking-tight">
+          Panneau de Contrôle
+        </h1>
+        <p class="text-sm text-gray-500 font-medium mt-1">Bienvenue, Admin</p>
+      </div>
+      <div class="flex items-center gap-4">
+        <button class="relative rounded-full hover:scale-110 transition" aria-label="Notifications">
+          <i data-lucide="Bell" class="w-6 h-6 text-blue-700"></i>
+          <span class="absolute top-1 right-1 bg-pink-500 rounded-full w-2.5 h-2.5 pulse"></span>
+        </button>
+        <div class="flex items-center gap-2">
+          <div class="bg-gradient-to-tr from-blue-500 to-purple-500 rounded-full w-10 h-10 flex items-center justify-center shadow-lg border-2 border-white">
+            <i data-lucide="User" class="w-6 h-6 text-white"></i>
+          </div>
+          <span class="hidden md:inline text-base font-semibold text-blue-800">Admin</span>
+        </div>
       </div>
     </header>
-
-    <!-- Form Section -->
-    <main class="p-6 bg-white flex flex-col gap-6">
-      <h2 class="text-lg font-semibold">Connecter une Page Facebook</h2>
-      <form id="tokenForm" class="space-y-4 max-w-lg">
-        <div>
-          <label for="page_id" class="block text-sm font-medium">ID de la Page</label>
-          <input type="text" id="page_id" name="page_id" class="w-full border px-3 py-2 rounded mt-1" required />
-        </div>
-        <div>
-          <label for="token" class="block text-sm font-medium">Jeton d’accès</label>
-          <input type="text" id="token" name="token" class="w-full border px-3 py-2 rounded mt-1" required />
-        </div>
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Connexion</button>
-      </form>
-      <div id="response" class="text-green-600 font-medium hidden"></div>
-    </main>
-  </div>
+    <!-- Content -->
+    <div id="main-content" class="flex-1 p-4 md:p-10 flex flex-col justify-center"></div>
+  </main>
 
   <script>
-    document.getElementById('tokenForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const page_id = document.getElementById('page_id').value.trim();
-      const token = document.getElementById('token').value.trim();
+    lucide.createIcons();
+    // Sidebar toggle (mobile)
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    let sidebarOpen = false;
 
-      const response = await fetch('/api/save-token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ page_id, token })
+    function setSidebar(open) {
+      sidebarOpen = open;
+      if(window.innerWidth < 768) {
+        sidebar.style.left = open ? '0' : '-100vw';
+        sidebarOverlay.classList.toggle('hidden', !open);
+        sidebar.classList.toggle('w-64', open);
+        sidebar.classList.toggle('w-20', !open);
+      }
+    }
+    setSidebar(false);
+
+    sidebarToggle.addEventListener('click', () => setSidebar(!sidebarOpen));
+    sidebarOverlay.addEventListener('click', () => setSidebar(false));
+
+    // Navigation
+    const mainContent = document.getElementById('main-content');
+    const sidebarLinks = document.querySelectorAll('.sidebar-link');
+    let currentSection = "home";
+    function setActiveSection(section) {
+      currentSection = section;
+      sidebarLinks.forEach(btn => {
+        btn.classList.remove('bg-white', 'text-primary', 'shadow-lg');
+        btn.classList.add('text-white');
+        btn.setAttribute('aria-current', '');
       });
+      const activeBtn = document.querySelector(`.sidebar-link[data-section="${section}"]`);
+      if(activeBtn) {
+        activeBtn.classList.add('bg-white', 'text-primary', 'shadow-lg');
+        activeBtn.classList.remove('text-white');
+        activeBtn.setAttribute('aria-current', 'page');
+      }
+      renderSection(section);
+      setSidebar(false);
+    }
+    sidebarLinks.forEach(btn => {
+      btn.addEventListener('click', () => setActiveSection(btn.getAttribute('data-section')));
+    });
 
-      const result = await response.json();
-      const messageDiv = document.getElementById('response');
-      messageDiv.textContent = result.message;
-      messageDiv.classList.remove('hidden');
+    // Section rendering
+    function renderSection(section) {
+      if(section === "home") {
+        mainContent.innerHTML = `
+        <div class="w-full max-w-xl mx-auto fade-in">
+          <div class="bg-white/90 shadow-2xl border-0 rounded-3xl p-8">
+            <div class="mb-6">
+              <h2 class="text-2xl font-bold text-blue-800 mb-1">Connecter une Page Facebook</h2>
+              <div class="text-gray-500">Entrez l'identifiant de la page Facebook et le jeton d'accès pour connecter votre page.</div>
+            </div>
+            <form id="fb-form" class="space-y-6" autocomplete="off">
+              <div>
+                <label for="pageId" class="font-semibold text-blue-700">Page ID</label>
+                <input id="pageId" name="pageId" type="text" class="mt-1 block w-full rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition p-3" placeholder="Entrez le Page ID" autocomplete="off" />
+                <div id="pageId-error" class="text-red-500 text-xs mt-1 hidden"></div>
+              </div>
+              <div>
+                <label for="accessToken" class="font-semibold text-blue-700">Jeton d'accès</label>
+                <input id="accessToken" name="accessToken" type="password" class="mt-1 block w-full rounded-lg border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition p-3" placeholder="Entrez le jeton d'accès" autocomplete="off" />
+                <div id="token-error" class="text-red-500 text-xs mt-1 hidden"></div>
+              </div>
+              <button type="submit" id="fb-submit" class="w-full py-3 text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-pink-500 transition-all shadow-lg rounded-xl text-white flex items-center justify-center gap-2">
+                <span id="fb-submit-text">Connecter la Page</span>
+                <svg id="fb-submit-loader" class="w-5 h-5 animate-spin hidden" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                </svg>
+              </button>
+              <div id="fb-message" class="text-green-600 text-sm mt-2 rounded-xl bg-green-50 px-4 py-2 shadow hidden"></div>
+              <div id="fb-error" class="text-red-600 text-sm mt-2 rounded-xl bg-red-50 px-4 py-2 shadow hidden"></div>
+            </form>
+          </div>
+        </div>
+        `;
+        lucide.createIcons();
+        // Form logic
+        const form = document.getElementById('fb-form');
+        const pageIdInput = document.getElementById('pageId');
+        const tokenInput = document.getElementById('accessToken');
+        const pageIdError = document.getElementById('pageId-error');
+        const tokenError = document.getElementById('token-error');
+        const submitBtn = document.getElementById('fb-submit');
+        const submitText = document.getElementById('fb-submit-text');
+        const submitLoader = document.getElementById('fb-submit-loader');
+        const msg = document.getElementById('fb-message');
+        const err = document.getElementById('fb-error');
+        form.onsubmit = function(e) {
+          e.preventDefault();
+          pageIdError.classList.add('hidden');
+          tokenError.classList.add('hidden');
+          msg.classList.add('hidden');
+          err.classList.add('hidden');
+          let valid = true;
+          if(!pageIdInput.value.trim()) {
+            pageIdError.textContent = "Le Page ID est requis.";
+            pageIdError.classList.remove('hidden');
+            valid = false;
+          }
+          if(!tokenInput.value.trim()) {
+            tokenError.textContent = "Le jeton d'accès est requis.";
+            tokenError.classList.remove('hidden');
+            valid = false;
+          }
+          if(!valid) return;
+          submitBtn.disabled = true;
+          submitText.textContent = "Connexion...";
+          submitLoader.classList.remove('hidden');
+          setTimeout(() => {
+            submitBtn.disabled = false;
+            submitText.textContent = "Connecter la Page";
+            submitLoader.classList.add('hidden');
+            if(/^\d+$/.test(pageIdInput.value.trim())) {
+              msg.textContent = "Page connectée avec succès ! 🎉";
+              msg.classList.remove('hidden');
+              err.classList.add('hidden');
+            } else {
+              err.textContent = "Échec de la connexion. Veuillez vérifier les informations saisies.";
+              err.classList.remove('hidden');
+              msg.classList.add('hidden');
+            }
+          }, 1200);
+        };
+    }
+      else if(section === "pages") {
+        mainContent.innerHTML = `
+        <div class="w-full max-w-xl mx-auto fade-in">
+          <div class="bg-white/90 shadow-2xl border-0 rounded-3xl p-8">
+            <div class="mb-6">
+              <h2 class="text-2xl font-bold text-blue-800 mb-1">Pages Connectées</h2>
+              <div class="text-gray-500">Liste des pages Facebook connectées à Stanley AI.</div>
+            </div>
+            <div class="flex flex-col items-center gap-4 py-8">
+              <div class="bg-gradient-to-br from-blue-200 via-purple-200 to-pink-200 border-2 border-dashed rounded-2xl w-20 h-20 flex items-center justify-center slide-in">
+                <i data-lucide="Users" class="w-10 h-10 text-blue-400"></i>
+              </div>
+              <span class="text-gray-500 text-base font-medium">Aucune page connectée pour le moment.</span>
+            </div>
+          </div>
+        </div>
+        `;
+        lucide.createIcons();
+      }
+      else if(section === "contact") {
+        mainContent.innerHTML = `
+        <div class="w-full max-w-xl mx-auto fade-in">
+          <div class="bg-white/90 shadow-2xl border-0 rounded-3xl p-8">
+            <div class="mb-6">
+              <h2 class="text-2xl font-bold text-blue-800 mb-1">Contact</h2>
+              <div class="text-gray-500">Besoin d'aide ? Contactez notre équipe de support.</div>
+            </div>
+            <div class="flex flex-col gap-4 py-4">
+              <div class="flex items-center gap-3 slide-in">
+                <i data-lucide="Mail" class="w-6 h-6 text-purple-500"></i>
+                <span class="text-blue-900 font-semibold">support@stanleyai.com</span>
+              </div>
+              <div class="flex items-center gap-3 slide-in">
+                <i data-lucide="User" class="w-6 h-6 text-blue-500"></i>
+                <span class="text-blue-900 font-semibold">Assistance en direct</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        `;
+        lucide.createIcons();
+      }
+    }
+
+    // Initial render
+    setActiveSection("home");
+
+    // Responsive sidebar
+    window.addEventListener('resize', () => {
+      if(window.innerWidth >= 768) {
+        sidebar.style.left = '0';
+        sidebar.classList.add('w-64');
+        sidebar.classList.remove('w-20');
+        sidebarOverlay.classList.add('hidden');
+      } else {
+        setSidebar(false);
+      }
     });
   </script>
 </body>
 </html>
+    
